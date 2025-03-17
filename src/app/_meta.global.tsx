@@ -7,6 +7,10 @@ const meta = {
     type: 'page',
     title: 'Documentation',
   },
+  interview: {
+    type: 'page',
+    title: 'Interview',
+  },
   about: {
     type: 'page',
     title: 'About',

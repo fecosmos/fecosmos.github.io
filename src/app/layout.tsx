@@ -20,7 +20,7 @@ const navbar = (
         </span>
       </>
     }
-    projectLink="https://github.com/shuding/nextra"
+    projectLink="https://github.com/fecosmos/fecosmos.github.io"
 
     // ... Your additional navbar options
   />
@@ -49,7 +49,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           banner={banner}
           navbar={navbar}
           pageMap={pageMap}
-          docsRepositoryBase="https://github.com/shuding/nextra/tree/main/docs"
+          docsRepositoryBase="https://github.com/fecosmos/fecosmos.github.io/tree/master"
           footer={footer}
           sidebar={{ defaultMenuCollapseLevel: 1 }}
 

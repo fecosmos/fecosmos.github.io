@@ -1,6 +1,6 @@
 # Event Loop
 
-下面代码运行结果是什么？
+下面代码运行结果是什么
 
 ```js
 const first = () =>
@@ -36,4 +36,3 @@ setTimeout(() => {
 }, 0);
 console.log(10);
 ```
-
