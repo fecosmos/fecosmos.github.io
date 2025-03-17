@@ -1,0 +1,43 @@
+---
+description:
+  Nextra is a framework built on top of Next.js that enables the creation of
+  content-focused websites. It combines the robust features of Next.js with
+  enhanced capabilities for crafting Markdown-based content.
+---
+
+
+# Introduction
+
+**Nextra** is a framework on top of Next.js, that lets you build content focused
+websites. It has all the great features from Next.js, plus extra power to create
+Markdown-based content with ease.
+
+```tsx
+import { Cards, Image } from 'nextra/components'
+import { cloneElement } from 'react'
+
+export default function MdxLayout(props) {
+  return cloneElement(props.children, {
+    components: {
+      img: Image
+    }
+  })
+}
+```
+
+```ts twoslash
+// @errors: 2540
+interface Todo {
+  title: string
+}
+ 
+const todo: Readonly<Todo> = {
+  title: 'Delete inactive users'.toUpperCase()
+  //  ^?
+}
+ 
+todo.title = 'Hello'
+ 
+Number.parseInt('123', 10)
+
+```
