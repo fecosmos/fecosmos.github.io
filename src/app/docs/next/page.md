@@ -317,7 +317,7 @@ npm run lint
 ### 安装
 
 ```bash npm2yarn
-npx shadcn-ui@latest init
+npx shadcn@latest init
 ```
 
 然后选择
