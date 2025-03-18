@@ -6,7 +6,21 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "format": "prettier --write ./src"
+  },
+  "lint-staged": {
+    "src/**/*": [
+      "npm run format"
+    ],
+    "*.{js,ts,mjs,json}": [
+      "npm run format"
+    ]
+  },
+  "config": {
+    "commitizen": {
+      "path": "git-cz"
+    }
   },
   "dependencies": {
     "next": "15.2.2",

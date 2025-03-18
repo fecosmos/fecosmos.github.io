@@ -1,7 +1,7 @@
 const meta = {
   index: {
-    type: "page",
-    display: "hidden",
+    type: 'page',
+    display: 'hidden',
   },
   docs: {
     type: 'page',
@@ -15,9 +15,9 @@ const meta = {
     type: 'page',
     title: 'About',
     theme: {
-      typesetting: 'article'
-    }
+      typesetting: 'article',
+    },
   },
 }
 
-export default meta;
+export default meta
