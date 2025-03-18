@@ -346,4 +346,180 @@ import { Button } from '@/components/ui/button'
 
 ### Next.js 15 + React 19
 
-将shadcn/用户界面与Next. js 15和React 19一起使用。参考 [Next.js 15 + React 19](https://ui.shadcn.com/docs/react-19)
+将 shadcn/ui 与 Next. js 15 和 React 19一起使用。参考 [Next.js 15 + React 19](https://ui.shadcn.com/docs/react-19)
+
+## 部署
+
+可以参考 next.js 官网 [Deploying](https://nextjs.org/docs/app/building-your-application/deploying)
+
+### Docker 部署
+
+官网提供了一个例子，可以参考 [With Docker](https://github.com/vercel/next.js/tree/canary/examples/with-docker)
+
+首先确保已经服务器上[安装 Docker](https://docs.docker.com/get-started/get-docker/)
+
+#### 创建 next docker 项目
+
+你可以在创建项目时选择 docker 模版
+
+```bash npm2yarn
+npx create-next-app --example with-docker nextjs-docker
+```
+
+#### 添加现有项目
+
+```ts
+// next.config.ts
+export default {
+  // ... rest of the configuration.
+  output: 'standalone',
+}
+```
+
+<details>
+  <summary>output: "standalone" 的作用</summary>
+
+- 生成独立的输出目录:
+  - 运行 next build 时，Next.js 会生成一个 standalone 目录，包含所有运行应用所需的文件。
+- 这个目录是自包含的，可以直接部署到生产环境，无需依赖 node_modules。
+
+- 优化生产部署：
+  - 减少部署包的大小，因为 standalone 目录只包含必要的文件。
+  - 避免在部署时重新安装依赖，提升部署效率。
+- 支持无服务器（Serverless）部署：
+  - 生成的 standalone 目录可以直接用于无服务器平台（如 Vercel、AWS Lambda 等）。
+  </details>
+
+#### Dockerfile 配置
+
+<details>
+  <summary>Dockerfile 配置</summary>
+
+```Dockerfile
+# syntax=docker.io/docker/dockerfile:1
+
+FROM node:22-alpine AS base
+
+# Install dependencies only when needed
+FROM base AS deps
+# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+# Install dependencies based on the preferred package manager
+COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* .npmrc* ./
+RUN \
+  if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
+  elif [ -f package-lock.json ]; then npm ci; \
+  elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm i --frozen-lockfile; \
+  else echo "Lockfile not found." && exit 1; \
+  fi
+
+
+# Rebuild the source code only when needed
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+# Next.js collects completely anonymous telemetry data about general usage.
+# Learn more here: https://nextjs.org/telemetry
+# Uncomment the following line in case you want to disable telemetry during the build.
+# ENV NEXT_TELEMETRY_DISABLED=1
+
+RUN \
+  if [ -f yarn.lock ]; then yarn run build; \
+  elif [ -f package-lock.json ]; then npm run build; \
+  elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm run build; \
+  else echo "Lockfile not found." && exit 1; \
+  fi
+
+# Production image, copy all the files and run next
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+# Uncomment the following line in case you want to disable telemetry during runtime.
+# ENV NEXT_TELEMETRY_DISABLED=1
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+COPY --from=builder /app/public ./public
+
+# Automatically leverage output traces to reduce image size
+# https://nextjs.org/docs/advanced-features/output-file-tracing
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+USER nextjs
+
+EXPOSE 3000
+
+ENV PORT=3000
+
+# server.js is created by next build from the standalone output
+# https://nextjs.org/docs/pages/api-reference/config/next-config-js/output
+ENV HOSTNAME="0.0.0.0"
+CMD ["node", "server.js"]
+```
+
+</details>
+
+我们还可以在 `Dockerfile` 文件中添加自己的一些配置，例如在 build 之前执行一些初始化操作
+
+#### 运行 Docker
+
+构建你的容器：
+
+```bash
+docker build -t nextjs-docker
+```
+
+运行你的容器
+
+```bash
+docker run -p 3000:3000 nextjs-docker
+```
+
+查看所有创建的容器
+
+```bash
+docker images
+```
+
+### Node.js
+
+运行 `npm run build` 来构建您的应用程序.
+
+```bash
+npm run build
+```
+
+最后，运行 `npm run start` 以启动 Node. js 服务器
+
+```bash
+npm run start
+```
+
+### 静态文件
+
+Next. js允许从静态站点或单页应用程序（SPA）开始，然后可以选择升级以使用需要服务器的功能。
+
+```ts
+// next.config.ts
+export default {
+  output: 'export',
+
+  // Optional: Change links `/me` -> `/me/` and emit `/me.html` -> `/me/index.html`
+  // trailingSlash: true,
+
+  // Optional: Prevent automatic `/me` -> `/me/`, instead preserve `href`
+  // skipTrailingSlashRedirect: true,
+
+  // Optional: Change the output directory `out` -> `dist`
+  // distDir: 'dist',
+}
+```
+
+由于 Next. js 支持这个静态导出，它可以部署和托管在任何可以提供 HTML/CSS/JS 静态资产的 Web 服务器上。这包括 AWS S3、Nginx 或 Apache 等工具。
