@@ -2,6 +2,9 @@
 
 下面代码运行结果是什么
 
+<details>
+  <summary>题目1</summary>
+  
 ```js
 const first = () =>
   new Promise((resolve, reject) => {
@@ -37,6 +40,29 @@ setTimeout(() => {
 console.log(10)
 ```
 
+<details>
+  <summary>答案</summary>
+
+```
+3
+7
+10
+4 5
+2 7
+1
+2
+6
+9
+8
+```
+
+  </details>
+
+</details>
+
+<details>
+  <summary>题目2</summary>
+
 ```js
 const async1 = async () => {
   console.log('async1')
@@ -61,3 +87,72 @@ setTimeout(() => {
   console.log('timer2')
 }, 1000)
 ```
+
+<details>
+  <summary>答案</summary>
+
+```
+script start
+async1
+promise1
+script end
+1
+timer2
+timer1
+```
+
+</details>
+
+</details>
+
+<details>
+  <summary>题目3</summary>
+
+```js
+async function testSometing() {
+  console.log('执行testSometing')
+  return 'testSometing'
+}
+
+async function testAsync() {
+  console.log('执行testAsync')
+  return Promise.resolve('hello async')
+}
+
+async function test() {
+  console.log('test start...')
+  const v1 = await testSometing()
+  console.log(v1)
+  const v2 = await testAsync()
+  console.log(v2)
+  console.log(v1, v2)
+}
+
+test()
+
+var promise = new Promise((resolve) => {
+  console.log('promise start...')
+  resolve('promise')
+})
+promise.then((val) => console.log(val))
+
+console.log('test end...')
+```
+
+<details>
+  <summary>答案</summary>
+
+```
+test start...
+执行testSometing
+promise start...
+test end...
+testSometing
+执行testAsync
+promise
+hello async
+testSometing hello async
+```
+
+</details>
+</details>
