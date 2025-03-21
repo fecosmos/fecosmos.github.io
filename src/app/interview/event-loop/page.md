@@ -189,7 +189,7 @@ console.log('script end')
 ```
 
 <details>
-<summary>答案</summary>
+<summary>题目</summary>
 
 ```
 script start
@@ -200,6 +200,31 @@ script end
 async1 end
 promise2
 setTimeout
+```
+
+</details>
+</details>
+<details>
+<summary>题目5</summary>
+
+```js
+Promise.resolve(1).then(2).then(Promise.resolve(3)).then(console.log)
+```
+
+<details>
+  <summary>答案</summary>
+
+```
+1
+```
+
+在 JavaScript 的 Promise 链式调用中，.then() 方法的参数需要是函数。如果传入非函数值（如数字、对象等），会被静默忽略，直接传递前一步的值
+
+```js
+Promise.resolve(1)
+  .then(2) // 忽略非函数参数，直接传递值 1
+  .then(Promise.resolve(3)) // 忽略非函数参数，继续传递值 1
+  .then(console.log) // 输出 1
 ```
 
 </details>
