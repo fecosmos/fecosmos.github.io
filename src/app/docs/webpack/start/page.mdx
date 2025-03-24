@@ -1,0 +1,486 @@
+# 从零搭建一个 Webpack 项目
+
+## 起步
+
+首先安装 webpack 依赖
+
+```bach npm2yarn
+npm init -y
+npm install webpack webpack-cli -D
+```
+
+我们要使用 ts 开发项目
+
+```bash
+tsc --init
+```
+
+配置打包命令，同时需要创建一个 `webpack.config.ts` 文件
+
+```json filename="package.json"
+{
+  "scripts": {
+    "build": "webpack --config webpack.config.ts"
+  }
+}
+```
+
+webpack 默认不支持直接使用 ts 格式的配置文件，需要安装 `ts-node`
+
+```bash npm2yarn
+npm i ts-node -D
+```
+
+使 webpack 支持 ts 格式的配置文件，需要安装 `ts-loader`
+
+```bash npm2yarn
+npm i ts-loader -D
+```
+
+编写 webpack 配置文件
+
+```ts filename="webpack.config.ts"
+// webpack.config.ts
+import type { Configuration } from 'webpack'
+import path from 'path'
+
+const config: Configuration = {
+  entry: './src/main.ts',
+  output: {
+    filename: 'bundle.js',
+    path: path.resolve(__dirname, './dist'),
+  },
+  mode: 'development',
+  module: {
+    rules: [
+      {
+        test: /\.ts$/,
+        use: 'ts-loader',
+        exclude: /node_modules/,
+      },
+    ],
+  },
+  resolve: {
+    extensions: ['.ts', '.js'],
+  },
+}
+
+export default config
+```
+
+创建 webpack 入口文件 `src/main.ts`
+
+```ts filename="src/main.ts"
+// src/main.ts
+console.log('hello world')
+```
+
+最终文件目录如下
+
+import { FileTree } from 'nextra/components'
+
+<FileTree>
+  <FileTree.Folder name="public" defaultOpen>
+    <FileTree.File name="index.html" />
+  </FileTree.Folder>
+  <FileTree.Folder name="src" defaultOpen>
+    <FileTree.File name="main.ts" />
+  </FileTree.Folder>
+  <FileTree.File name="package.json" />
+  <FileTree.File name="webpack.config.ts" />
+</FileTree>
+
+执行打包命令，会在 `dist` 目录下生成 `bundle.js` 文件
+
+```bash npm2yarn
+npm run build
+```
+
+最基本的 webpack 配置就完成了，接下来我们可以继续配置一些其他的插件，来提高开发效率。
+
+## html-webpack-plugin
+
+`html-webpack-plugin` 是 webpack 生态中一个非常核心的插件，它的主要作用是自动化生成 `html` 文件，并自动注入 webpack 打包后的资源（如 `js`、`css` 文件）。
+
+```bash npm2yarn
+npm i --D html-webpack-plugin
+```
+
+```ts filename="webpack.config.ts"  {25-29}
+// webpack.config.ts
+import type { Configuration } from 'webpack'
+import path from 'path'
+import HtmlWebpackPlugin from 'html-webpack-plugin'
+
+const config: Configuration = {
+  entry: './src/main.ts',
+  output: {
+    filename: 'bundle.js',
+    path: path.resolve(__dirname, './dist'),
+  },
+  mode: 'development',
+  module: {
+    rules: [
+      {
+        test: /\.ts$/,
+        use: 'ts-loader',
+        exclude: /node_modules/,
+      },
+    ],
+  },
+  resolve: {
+    extensions: ['.ts', '.js'],
+  },
+  plugins: [
+    new HtmlWebpackPlugin({
+      template: path.resolve(__dirname, 'public/index.html'),
+    }),
+  ],
+}
+
+export default config
+```
+
+执行 `npm run build` 后，会在 `dist` 目录下生成 `index.html` 文件，同时会自动注入 `bundle.js` 文件。
+
+## dev-server
+
+`webpack-dev-server` 是一个开发服务器，它可以帮助我们在开发过程中实时预览项目效果。
+
+```bash npm2yarn
+npm i --D webpack-dev-server
+```
+
+```json filename="package.json"
+{
+  "scripts": {
+    "dev": "webpack serve --config webpack.config.ts"
+  }
+}
+```
+
+```ts filename="webpack.config.ts"
+const config: Configuration = {
+  devServer: {
+    static: './dist',
+    port: 8080,
+  },
+}
+```
+
+## 加载资源
+
+### 加载 css
+
+JavaScript 模块中导入 css 文件，需要使用 `style-loader` 和 `css-loader`。
+
+```bash npm2yarn
+npm i style-loader css-loader -D
+```
+
+```ts filename="webpack.config.ts"
+const config: Configuration = {
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        use: ['style-loader', 'css-loader'],
+      },
+    ],
+  },
+}
+```
+
+如果要加载 sass 文件，需要安装 `sass-loader` 与 `sass`。
+
+```bash npm2yarn
+npm i sass-loader sass -D
+```
+
+将 sass-loader 、css-loader 与 style-loader 进行链式调用, 使得 webpack 能够正确解析 sass 文件。
+
+```ts filename="webpack.config.ts"
+const config: Configuration = {
+  module: {
+    rules: [
+      {
+        test: /\.scss$/,
+        use: ['style-loader', 'css-loader', 'sass-loader'],
+      },
+    ],
+  },
+}
+```
+
+## Vue
+
+使用 `vue-loader` 来加载 vue 文件，这里我们还需要安装 `vue-template-compiler`，因为 vue-loader 依赖于 vue-template-compiler
+
+```bash npm2yarn
+npm i vue vue-loader vue-template-compiler -D
+```
+
+这里我们需要安装 `vue-style-loader` 来加载 vue 文件中的样式，替换掉之前的 `style-loader`
+
+```bash npm2yarn
+npm i vue-style-loader -D
+```
+
+```ts filename="webpack.config.ts"
+import { VueLoaderPlugin } from 'vue-loader'
+
+const config: Configuration = {
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        use: ['vue-style-loader', 'css-loader'],
+      },
+      {
+        test: /\.scss$/,
+        use: ['vue-style-loader', 'css-loader', 'sass-loader'],
+      },
+      {
+        test: /\.vue$/,
+        use: 'vue-loader',
+      },
+    ],
+  },
+  plugins: [new VueLoaderPlugin()],
+}
+```
+
+创建一个 `App.vue` 文件，来测试 vue 文件的加载
+
+```vue filename="src/App.vue"
+<script lang="ts" setup>
+const msg = 'Hello, Vue 3.0 + TypeScript + Webpack!'
+</script>
+<template>
+  <div>{{ msg }}</div>
+</template>
+```
+
+修改 `main.ts` 文件
+
+```ts filename="src/main.ts"
+import { createApp } from 'vue'
+import App from './App.vue'
+
+const app = createApp(App)
+app.mount('#app')
+```
+
+我们需要创建 `shims.d.ts` 文件，来声明 `.vue` 文件的模块
+
+```ts filename="src/shims-vue.d.ts"
+// src/shims-vue.d.ts
+declare module '*.vue' {
+  import type { DefineComponent } from 'vue'
+  const component: DefineComponent<{}, {}, any>
+  export default component
+}
+```
+
+页面上就会显示
+
+```
+Hello, Vue 3.0 + TypeScript + Webpack!
+```
+
+## 环境变量
+
+安装 `cross-env` 用于设置环境变量
+
+```bash npm2yarn
+npm i cross-env -D
+```
+
+我们希望 webpack 支持不同环境的配置，比如开发环境、测试环境、生产环境等。支持使用 .env 文件来配置环境变量。
+
+```bash npm2yarn
+npm i dotenv -D
+```
+
+解析 .env 文件
+
+```ts
+import dotenv from 'dotenv'
+import fs from 'fs'
+
+const envFiles = [
+  path.resolve(__dirname, '.env'),
+  path.resolve(__dirname, isDev ? '.env.development' : '.env.production'),
+  path.resolve(__dirname, '.env.local'),
+]
+const env = envFiles.reduce((acc, envFile) => {
+  if (fs.existsSync(envFile)) {
+    const result = dotenv.config({ path: envFile })
+    if (result.error) {
+      //
+    } else {
+      Object.assign(acc, result.parsed)
+    }
+  } else {
+    console.warn(`File not found: ${envFile}`)
+  }
+  return acc
+}, {})
+```
+
+在 webpack 配置文件中使用环境变量
+
+```ts filename="webpack.config.ts"
+const config: Configuration = {
+  plugins: [
+    new webpack.DefinePlugin({
+      'process.env': JSON.stringify(env),
+    }),
+  ],
+}
+```
+
+这样，我们在代码中就可以使用 `process.env` 来访问环境变量了。
+
+## 不同环境配置
+
+在不同环境下，我们可能需要不同的配置，比如开发环境下需要启用 source-map，生产环境下需要压缩代码等。我们需要将webpack配置文件拆分成不同的文件，然后根据环境变量来加载不同的配置文件。
+
+在这之前需要安装 `webpack-merge` 来合并配置文件
+
+```bash npm2yarn
+npm i webpack-merge -D
+```
+
+可以将 webpack 配置文件拆分成 `webpack.config.ts`、`webpack.config.dev.ts`、`webpack.config.prod.ts` 三个文件
+
+```ts filename="webpack.config.dev.ts"
+import { Configuration } from 'webpack'
+import merge from 'webpack-merge'
+import baseConfig from './webpack.config'
+
+const devConfig: Configuration = merge(baseConfig, {
+  mode: 'development',
+  devtool: 'source-map',
+  devServer: {
+    port: process.env.PORT ? process.env.PORT : 8080,
+    static: './dist',
+  },
+})
+export default devConfig
+```
+
+```ts filename="webpack.config.prod.ts"
+import { Configuration } from 'webpack'
+import merge from 'webpack-merge'
+import baseConfig from './webpack.config'
+
+export const prodConfig: Configuration = merge(baseConfig, {
+  mode: 'production',
+  optimization: {
+    minimize: true,
+    splitChunks: {
+      chunks: 'all',
+    },
+  },
+})
+export default prodConfig
+```
+
+## eslint
+
+使用 eslint 来检查代码规范
+
+```bash npm2yarn
+npm i eslint eslint-webpack-plugin -D
+```
+
+在 `webpack.config.ts` 中添加 eslint 插件
+
+```ts filename="webpack.config.ts
+import ESLintPlugin from 'eslint-webpack-plugin'
+
+const config: Configuration = {
+  plugins: [
+    new ESLintPlugin({
+      extensions: ['js', 'ts', 'vue'],
+    }),
+  ],
+}
+```
+
+使用命令创建 `eslintrc.mjs` 文件
+
+```bash npm2yarn
+npm init @eslint/config@latest
+```
+
+```js filename="eslintrc.mjs"
+import { defineConfig } from 'eslint/config'
+import globals from 'globals'
+import js from '@eslint/js'
+import tseslint from 'typescript-eslint'
+import pluginVue from 'eslint-plugin-vue'
+
+export default defineConfig([
+  { files: ['**/*.{js,mjs,cjs,ts,vue}'] },
+  {
+    files: ['**/*.{js,mjs,cjs,ts,vue}'],
+    languageOptions: { globals: globals.browser },
+  },
+  {
+    files: ['**/*.{js,mjs,cjs,ts,vue}'],
+    plugins: { js },
+    extends: ['js/recommended'],
+  },
+  tseslint.configs.recommended,
+  pluginVue.configs['flat/recommended'],
+  {
+    files: ['**/*.vue'],
+    languageOptions: { parserOptions: { parser: tseslint.parser } },
+  },
+  {
+    rules: {
+      semi: ['error', 'never'],
+      quotes: ['error', 'single'],
+    },
+  },
+])
+```
+
+配置 lint 命令
+
+```json filename="package.json"
+{
+  "scripts": {
+    "lint": "eslint --ext .js,.ts,.vue src"
+  }
+}
+```
+
+## prettier
+
+使用 prettier 来格式化代码
+
+```bash npm2yarn
+npm i prettier eslint-config-prettier -D
+```
+
+在 `eslintrc.mjs` 中添加 prettier 插件
+
+```js filename="eslintrc.mjs"
+import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended'
+export default defineConfig([
+  // 放到最后
+  eslintPluginPrettierRecommended,
+])
+```
+
+创建 `.prettierrc` 文件
+
+```json filename=".prettierrc"
+{
+  "semi": false,
+  "singleQuote": true
+}
+```
