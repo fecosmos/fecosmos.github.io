@@ -212,6 +212,38 @@ const config: Configuration = {
 }
 ```
 
+### 图片资源
+
+webpack 5 自带了处理图片资源的功能，只需要配置 `asset/resource` 即可
+
+```ts filename="webpack.config.ts"
+const config: Configuration = {
+  module: {
+    rules: [
+      {
+        test: /\.(png|jpe?g|gif|svg)$/i,
+        type: 'asset/resource',
+      },
+    ],
+  },
+}
+```
+
+### 字体资源
+
+```ts filename="webpack.config.ts"
+const config: Configuration = {
+  module: {
+    rules: [
+      {
+        test: /\.(woff|woff2|eot|ttf|otf)$/i,
+        type: 'asset/resource',
+      },
+    ],
+  },
+}
+```
+
 ## Vue
 
 使用 `vue-loader` 来加载 vue 文件，这里我们还需要安装 `vue-template-compiler`，因为 vue-loader 依赖于 vue-template-compiler
@@ -463,7 +495,7 @@ export default defineConfig([
 使用 prettier 来格式化代码
 
 ```bash npm2yarn
-npm i prettier eslint-config-prettier -D
+npm i prettier eslint-config-prettier eslint-plugin-prettier -D
 ```
 
 在 `eslintrc.mjs` 中添加 prettier 插件
@@ -482,5 +514,172 @@ export default defineConfig([
 {
   "semi": false,
   "singleQuote": true
+}
+```
+
+## react
+
+webpack 配置 react
+
+```bash npm2yarn
+npm i react react-dom -S
+```
+
+修改 `webpack.config.ts` 文件，支持 tsx
+
+```ts filename="webpack.config.ts"
+const config: Configuration = {
+  module: {
+    rules: [
+      {
+        test: /\.tsx?$/,
+        use: 'ts-loader',
+        exclude: /node_modules/,
+      },
+    ],
+  },
+  resolve: {
+    extensions: ['.ts', '.js', '.json', '.tsx'],
+  },
+}
+```
+
+修改 `tsconfig.json` 文件，支持 jsx
+
+```json filename="tsconfig.json"
+{
+  "compilerOptions": {
+    "jsx": "react-jsx"
+  }
+}
+```
+
+创建一个 `App.tsx` 文件，来测试 react 文件的加载
+
+```tsx filename="src/App.tsx"
+import { useState } from 'react'
+
+export default function App() {
+  const [count, setCount] = useState(0)
+  return (
+    <>
+      <div>count:{count}</div>
+      <button onClick={() => setCount(count + 1)}>+</button>
+    </>
+  )
+}
+```
+
+修改 `main.ts` 文件
+
+```ts filename="src/main.ts"
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App'
+
+const root = ReactDOM.createRoot(document.getElementById('app') as HTMLElement)
+
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+)
+```
+
+运行就可以看到页面上显示了一个按钮，点击按钮会增加 count 的值
+
+## 优化
+
+生产环境下，我们需要对代码进行优化，比如压缩代码、提取公共代码、代码分割等。
+
+### 打包清理之前的文件
+
+```ts filename="webpack.config.prod.ts"
+const config: Configuration = {
+  output: {
+    ...
+    clean: true,
+  },
+}
+```
+
+### css
+
+#### css 提取
+
+```bash npm2yarn
+npm i mini-css-extract-plugin -D
+```
+
+```ts filename="webpack.config.prod.ts"
+import MiniCssExtractPlugin from 'mini-css-extract-plugin'
+const config: Configuration = {
+  modules: {
+    rules: [
+      {
+        test: /\.css$/,
+        use: [
+          isDev ? 'vue-style-loader' : MiniCssExtractPlugin.loader,
+          'css-loader',
+        ],
+      },
+      {
+        test: /\.scss$/,
+        use: [
+          isDev ? 'vue-style-loader' : MiniCssExtractPlugin.loader,
+          'css-loader',
+          'sass-loader',
+        ],
+      },
+    ],
+  },
+  plugins: [
+    new MiniCssExtractPlugin({
+      filename: '[name].[contenthash].css',
+    }),
+  ],
+}
+```
+
+打包运行后，发现 css 文件已经被提取到单独的文件中了，但是部分代码没有压缩，下面我们来配置压缩插件。
+
+#### css 压缩
+
+```bash npm2yarn
+npm i css-minimizer-webpack-plugin -D
+```
+
+```ts filename="webpack.config.prod.ts"
+import CssMinimizerPlugin from 'css-minimizer-webpack-plugin'
+```
+
+### 代码压缩
+
+webpack 生产环境下，会自动压缩代码，但是我们可以使用 `terser-webpack-plugin` 来自定义压缩配置
+
+```bash npm2yarn
+npm i terser-webpack-plugin -D
+```
+
+```ts filename="webpack.config.prod.ts"
+import TerserPlugin from 'terser-webpack-plugin'
+
+const config: Configuration = {
+  optimization: {
+    minimizer: [
+      new TerserPlugin({
+        extractComments: false,
+        parallel: true,
+        terserOptions: {
+          compress: {
+            drop_console: true,
+          },
+          format: {
+            comments: false,
+          },
+        },
+      }),
+    ],
+  },
 }
 ```

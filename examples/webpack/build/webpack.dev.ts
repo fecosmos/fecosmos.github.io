@@ -1,8 +1,10 @@
 import { Configuration } from 'webpack'
 import merge from 'webpack-merge'
 import baseConfig from './webpack.config'
+import reactConfig from './webpack.react'
 
-const devConfig: Configuration = merge(baseConfig, {
+const config = merge(baseConfig, reactConfig)
+const devConfig: Configuration = merge(config, {
   mode: 'development',
   devtool: 'source-map',
   devServer: {

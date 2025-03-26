@@ -7,6 +7,7 @@ import 'webpack-dev-server'
 import dotenv from 'dotenv'
 import fs from 'fs'
 import ESLintPlugin from 'eslint-webpack-plugin'
+import MiniCssExtractPlugin from 'mini-css-extract-plugin'
 const isDev = process.env.NODE_ENV === 'development'
 
 const envFiles = [
@@ -32,11 +33,12 @@ const env = envFiles.reduce((acc, envFile) => {
 
 const config: Configuration = {
   entry: {
-    import: path.resolve(__dirname, '../src/main.ts'),
+    import: path.resolve(__dirname, '../src/main.tsx'),
   },
   output: {
-    filename: '[name].bundle.js',
+    filename: 'js/[name][contenthash].js',
     path: path.resolve(__dirname, '../dist'),
+    clean: true,
   },
   mode: isDev ? 'development' : 'production',
   module: {
@@ -51,20 +53,34 @@ const config: Configuration = {
       },
       {
         test: /\.css$/,
-        use: ['vue-style-loader', 'css-loader'],
+        use: [
+          isDev ? 'vue-style-loader' : MiniCssExtractPlugin.loader,
+          'css-loader',
+        ],
       },
       {
         test: /\.scss$/,
-        use: ['vue-style-loader', 'css-loader', 'sass-loader'],
+        use: [
+          isDev ? 'vue-style-loader' : MiniCssExtractPlugin.loader,
+          'css-loader',
+          'sass-loader',
+        ],
       },
       {
         test: /\.vue$/,
         use: 'vue-loader',
       },
+      {
+        test: /\.(png|svg|jpg|jpeg|gif)$/i,
+        type: 'asset/resource',
+        generator: {
+          filename: 'assets/[name].[hash][ext]', // 指定输出路径
+        },
+      },
     ],
   },
   resolve: {
-    extensions: ['.ts', '.js', '.json'],
+    extensions: ['.ts', '.js', '.json', '.tsx'],
   },
   plugins: [
     new HtmlWebpackPlugin({
