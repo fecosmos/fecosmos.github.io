@@ -229,3 +229,45 @@ Promise.resolve(1)
 
 </details>
 </details>
+
+<details>
+<summary>题目6</summary>
+
+```js
+new Promise((resolve, reject) => {
+  resolve(2)
+  new Promise((resolve, reject) => {
+    resolve(5)
+  }).then((v) => {
+    console.log(v)
+  })
+}).then((v) => {
+  console.log(v)
+})
+
+new Promise((resolve, reject) => {
+  setTimeout(() => {
+    resolve(2)
+    new Promise((resolve, reject) => {
+      resolve(5)
+    }).then((v) => {
+      console.log(v)
+    })
+  })
+}).then((v) => {
+  console.log(v)
+})
+```
+
+<details>
+  <summary>答案</summary>
+
+```
+5
+2
+2
+5
+```
+
+</details>
+</details>
