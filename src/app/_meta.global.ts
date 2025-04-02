@@ -5,11 +5,11 @@ const meta = {
   },
   docs: {
     type: 'page',
-    title: 'Documentation',
+    title: '文档',
   },
   interview: {
     type: 'page',
-    title: 'Interview',
+    title: '面试题',
   },
   about: {
     type: 'page',
